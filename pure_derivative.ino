@@ -8,11 +8,18 @@
 
 
 #include <I2C.h>
+#include <DigitalIO.h>
+
 #define CP_OK 1
 #define CP_ERROR 0
 
 
 #define baro 0x60
+//soft i2c
+#define baro_read 0xC1 /*needed for the soft serial i2c*/
+#define baro_write 0xC0
+#define NACK  1
+#define ACK  0
 
 /*Barometer registers*/
 #define DR_STATUS 0x00
@@ -38,47 +45,80 @@ unsigned int counter = 1;
 unsigned int i;
 unsigned int delay_val = 1800;
 unsigned int time = 0;
+unsigned int x;
+unsigned int buf;
+
+/*Set Soft I2C pins */
+const uint8_t SDA_PIN = 2;
+const uint8_t SCL_PIN = 3;
+
+/*********  SOFT I2C setup  ****************************************/
+SoftI2cMaster i2c(SCL_PIN, SDA_PIN);
+
 
 /********************FUNCTION PROTOTYPES************************************/
 
-//unsigned int SingleBarometerRead(unsigned long *);
-
+unsigned int SingleBarometerRead(unsigned long *);
+unsigned int Soft_SingleBarometerRead(unsigned long *raw);
 
 /******************** VOID SETUP ******************************************/
 void setup()
-{
+{    
   I2c.begin();        // join i2c bus (address optional for master)
   TWBR = 12;         //set the I2C frequency to 400kHz 
-  I2c.pullup(1);
+  //I2c.pullup(0);
   I2c.write(baro,PT_DATA_CFG,set_PDEFE_DREM); //turn on data ready flags
   Serial.begin(9600);  // start serial for output
+  
+/******************** Soft I2C *******************************************/
+
+while (!Serial);
+  
+  if (!digitalRead(SDA_PIN) && !digitalRead(SCL_PIN)) {
+    Serial.println("External pull-up resistors appear to be missing.");
+    Serial.println("Many false responses may be detected.");
+    Serial.println("Type any character to continue.");
+
+    while (!Serial.available());
+    Serial.println();
+
+  }
+
 }
-
-
 /******************** VOID Loop ******************************************/
 
-void loop()
-{
+void loop(){
 
-  time = micros(); //store the start time of our reads
-  last_raw = raw;
-  SingleBarometerRead(&raw);
-
-
-  /* find the derivative.....*/
-  derivative = last_raw-raw;
-
-  /************************************************************ OUTPUT ********************************************/
-  Serial.println(raw,DEC);
-
-  /************************************************************ OUTPUT ********************************************/
-
+    for(x = 1; x<4;x++){  //test all sensors
+      switch(x){
+      case 1:   
+                break;
+ 
+      case 2:     
+                break;
+ 
+      case 3:     
+                break;  
+      default:    
+                break;                
+      } 
+     
+     
+        time = micros(); //store the start time of our reads
+        last_raw = raw;
+        //SingleBarometerRead(&raw);
+    Soft_SingleBarometerRead(&raw);
+    
+      /* find the derivative.....*/
+        derivative = last_raw-raw;
+    
+      /************************************************************ OUTPUT ********************************************/
+        Serial.println(raw,DEC);
+    
+      /************************************************************ OUTPUT ********************************************/
+  }
   //  PrintSignedNumber(derivative);
 }
-
-
-
-
 
 
 unsigned int SingleBarometerRead(unsigned long *raw){
@@ -120,6 +160,79 @@ unsigned int SingleBarometerRead(unsigned long *raw){
 
 }
 
+unsigned int Soft_SingleBarometerRead(unsigned long *raw){
+
+
+  /*Temporary output data*/
+  unsigned long Data[3];
+
+//initiates a single barometer read. 
+  i2c.start();
+  i2c.write(baro_write);
+  i2c.write(CTRL_REG1);
+  i2c.write(set_OST_OS);
+  i2c.stop();
+  //buf = CTRL_REG1;
+  //i2c.transfer(baro_write,&buf,1,I2C_CONTINUE); //send the barometer address and the register address
+  //buf = set_OST_OS; 
+  //i2c.transferContinue(&buf,1,I2C_STOP);//send the data to be written into the register
+
+  
+  /*Check for finished acquisition by checking the dataready flag*/
+  delay(500);
+  
+  //read the status of the acquisition -  I2c.read(baro_read,DR_STATUS,1);
+  
+  i2c.start();
+  i2c.write(baro_write);
+  i2c.write(DR_STATUS);
+  i2c.start();
+  i2c.write(baro_read);
+  //buf = i2c.read(ACK);
+  buf = i2c.read(NACK);
+  i2c.stop();
+    
+  while((buf&DATA_READY_PRESSURE) == 0){ 
+  i2c.start();
+  i2c.write(baro_write);
+  i2c.write(DR_STATUS);
+  i2c.start();
+  i2c.write(baro_read);
+  //buf = i2c.read(ACK);
+  buf = i2c.read(NACK);
+  i2c.stop();
+ //Serial.println(buf,BIN);
+  }
+   
+   i2c.start();
+   i2c.write(baro_write);
+   i2c.write(OUT_P_MSB);
+   i2c.start();
+   i2c.write(baro_read);
+   //i2c.read(ACK);
+   Data[2] = i2c.read(ACK);
+   Data[1] = i2c.read(ACK);
+   Data[0] = i2c.read(NACK);
+   i2c.stop();
+  // buf = OUT_P_MSB;
+  //i2c.transfer(baro_write,&buf,1,I2C_REP_START); //send the barometer address and the register address
+  //i2c.transfer(baro_read,&Data,3,I2C_STOP); //read the value into the buffer
+
+  //The bitmap of the value received from the barometer however places these at the 4 MSB positions of the 8-bit word received. 
+  //The lower 4-bits are '0'. THus we rightshift to get rid of these.
+  //CHANGED: we ignore the fraction now...
+  //Serial.println(((MSB_Data<<10)|(CSB_Data<<2)|LSB_Data>>6),DEC);
+
+
+  *raw = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|Data[0]>>6);   //all output data put together. 
+  if(raw != 0){
+    return CP_OK;
+  }
+  else{
+    return CP_ERROR;
+  }
+
+}
 
 
 
