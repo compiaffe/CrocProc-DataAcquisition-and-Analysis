@@ -15,6 +15,7 @@
 
 
 #define baro 0x60
+#define DEBUG 1
 //soft i2c
 #define baro_read 0xC1 /*needed for the soft serial i2c*/
 #define baro_write 0xC0
@@ -90,7 +91,9 @@ void setup()
 /******************** VOID Loop ******************************************/
 
 void loop(){
-
+#ifdef DEBUG
+  Serial.println("Hello World!");
+#endif
   Soft_TripleBarometerRead(&tri_raw);
   Serial.println(tri_raw.s0,DEC);
   Serial.println(tri_raw.s1,DEC);
@@ -116,6 +119,9 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
 
 
   //************************************** sent barometers a read command ******************************
+#ifdef DEBUG
+  Serial.println("Sending 1st baro command");
+#endif 
   //initiates a single barometer read on the first Barometer 
   i2c_0.start();
   i2c_0.write(baro_write);
@@ -123,13 +129,18 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
   i2c_0.write(set_OST_OS);
   i2c_0.stop();
 
+#ifdef DEBUG
+  Serial.println("Sending 2nd baro command");
+#endif 
   //initiates a single barometer read on the second Barometer
   i2c_1.start();
   i2c_1.write(baro_write);
   i2c_1.write(CTRL_REG1);
   i2c_1.write(set_OST_OS);
   i2c_1.stop();
-
+#ifdef DEBUG
+  Serial.println("Sending 3rd baro command");
+#endif 
   //initiates a single barometer read on the third Barometer
   i2c_2.start();
   i2c_2.write(baro_write);
@@ -139,6 +150,9 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
 
   //delay(500);
   //************************************* Check if data ready **************************************  
+  #ifdef DEBUG
+  Serial.println("Checking 1st data ready");
+#endif 
   i2c_0.start();  //read the status of the acquisition on the first baro 1111111111111111111111111111111111111
   i2c_0.write(baro_write);
   i2c_0.write(DR_STATUS);
@@ -156,7 +170,9 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
     buf = i2c_0.read(NACK);
     i2c_0.stop();
   }  
-
+  #ifdef DEBUG
+  Serial.println("Checking 2nd data ready");
+#endif 
 
   i2c_1.start();  //read the status of the acquisition on the second baro 2222222222222222222222222222
   i2c_1.write(baro_write);
@@ -176,7 +192,9 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
     buf = i2c_1.read(NACK);
     i2c_1.stop();
   }
-
+  #ifdef DEBUG
+  Serial.println("Checking 3rd data ready");
+#endif 
   i2c_1.start();  //read the status of the acquisition on the third baro 33333333333333333333333333333
   i2c_1.write(baro_write);
   i2c_1.write(DR_STATUS);
@@ -196,7 +214,9 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
     i2c_1.stop();
   }
   //************************************ Finally read the data *************************************   
-
+  #ifdef DEBUG
+  Serial.println("read 1st data ");
+#endif 
 
   i2c_0.start(); //read from 2nd baro       1111111111111111111111
   i2c_0.write(baro_write);
@@ -213,7 +233,9 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
   //Serial.println(((MSB_Data<<10)|(CSB_Data<<2)|LSB_Data>>6),DEC);
   tri_raw->s0 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|Data[0]>>6);   //all output data put together. 
 
-
+  #ifdef DEBUG
+  Serial.println("read 2nd data ");
+#endif 
 
   i2c_1.start(); //read from 2nd baro       2222222222222222222222222
   i2c_1.write(baro_write);
@@ -226,7 +248,10 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
   Data[0] = i2c_1.read(NACK);
   i2c_1.stop();
   tri_raw->s1 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|Data[0]>>6);   //all output data put together. 
-
+ 
+  #ifdef DEBUG
+  Serial.println("read 3rd data ");
+#endif 
 
   i2c_2.start(); //read from 3rd baro       333333333333333333333333
   i2c_2.write(baro_write);
@@ -241,6 +266,7 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
   tri_raw->s2 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|Data[0]>>6);   //all output data put together. 
 
 }
+
 
 
 
