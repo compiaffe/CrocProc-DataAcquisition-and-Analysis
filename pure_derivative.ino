@@ -15,7 +15,7 @@
 
 
 #define baro 0x60
-#define DEBUG 1
+//#define DEBUG 1
 //soft i2c
 #define baro_read 0xC1 /*needed for the soft serial i2c*/
 #define baro_write 0xC0
@@ -38,9 +38,9 @@
 
 //the raw input value in binary
 struct triple{
-  unsigned int s0;
-  unsigned int s1;
-  unsigned int s2;
+  unsigned long s0;
+  unsigned long s1;
+  unsigned long s2;
 } 
 tri_raw;
 
@@ -71,7 +71,7 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw);
 /******************** VOID SETUP ******************************************/
 void setup()
 {    
-  Serial.begin(115200);  // start serial for output
+  Serial.begin(9600);  // start serial for output
 
   /******************** Soft I2C *******************************************/
 
@@ -86,6 +86,27 @@ void setup()
     Serial.println();
 
   }
+
+  /*Set up the data ready flags...*/
+  i2c_0.start();
+  i2c_0.write(baro_write);
+  i2c_0.write(PT_DATA_CFG);
+  i2c_0.write(set_PDEFE_DREM);
+  i2c_0.stop();
+
+  i2c_1.start();
+  i2c_1.write(baro_write);
+  i2c_1.write(PT_DATA_CFG);
+  i2c_1.write(set_PDEFE_DREM);
+  i2c_1.stop();
+
+
+  i2c_2.start();
+  i2c_2.write(baro_write);
+  i2c_2.write(PT_DATA_CFG);
+  i2c_2.write(set_PDEFE_DREM);
+  i2c_2.stop();
+
 
 }
 /******************** VOID Loop ******************************************/
@@ -150,7 +171,7 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
 
   //delay(500);
   //************************************* Check if data ready **************************************  
-  #ifdef DEBUG
+#ifdef DEBUG
   Serial.println("Checking 1st data ready");
 #endif 
   i2c_0.start();  //read the status of the acquisition on the first baro 1111111111111111111111111111111111111
@@ -170,7 +191,7 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
     buf = i2c_0.read(NACK);
     i2c_0.stop();
   }  
-  #ifdef DEBUG
+#ifdef DEBUG
   Serial.println("Checking 2nd data ready");
 #endif 
 
@@ -192,7 +213,7 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
     buf = i2c_1.read(NACK);
     i2c_1.stop();
   }
-  #ifdef DEBUG
+#ifdef DEBUG
   Serial.println("Checking 3rd data ready");
 #endif 
   i2c_1.start();  //read the status of the acquisition on the third baro 33333333333333333333333333333
@@ -214,7 +235,7 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
     i2c_1.stop();
   }
   //************************************ Finally read the data *************************************   
-  #ifdef DEBUG
+#ifdef DEBUG
   Serial.println("read 1st data ");
 #endif 
 
@@ -223,17 +244,24 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
   i2c_0.write(OUT_P_MSB);
   i2c_0.start();
   i2c_0.write(baro_read);
+
   Data[2] = i2c_0.read(ACK);
   Data[1] = i2c_0.read(ACK);
   Data[0] = i2c_0.read(NACK);
   i2c_0.stop();
+#ifdef OUTPUT_DEBUG
+  Serial.println((Data[2]<<10),BIN);
+  Serial.println((Data[1]<<2),BIN);
+  Serial.println((Data[0]>>6),BIN);
+
+#endif
   //The bitmap of the value received from the barometer however places these at the 4 MSB positions of the 8-bit word received. 
   //The lower 4-bits are '0'. THus we rightshift to get rid of these.
   //CHANGED: we ignore the fraction now...
   //Serial.println(((MSB_Data<<10)|(CSB_Data<<2)|LSB_Data>>6),DEC);
-  tri_raw->s0 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|Data[0]>>6);   //all output data put together. 
+  tri_raw->s0 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|(Data[0]>>6));   //all output data put together. 
 
-  #ifdef DEBUG
+#ifdef DEBUG
   Serial.println("read 2nd data ");
 #endif 
 
@@ -247,9 +275,9 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
   Data[1] = i2c_1.read(ACK);
   Data[0] = i2c_1.read(NACK);
   i2c_1.stop();
-  tri_raw->s1 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|Data[0]>>6);   //all output data put together. 
- 
-  #ifdef DEBUG
+  tri_raw->s1 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|(Data[0]>>6));   //all output data put together. 
+
+#ifdef DEBUG
   Serial.println("read 3rd data ");
 #endif 
 
@@ -262,10 +290,12 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
   Data[2] = i2c_2.read(ACK);
   Data[1] = i2c_2.read(ACK);
   Data[0] = i2c_2.read(NACK);
+
   i2c_2.stop();
-  tri_raw->s2 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|Data[0]>>6);   //all output data put together. 
+  tri_raw->s2 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|(Data[0]>>6));   //all output data put together. 
 
 }
+
 
 
 
