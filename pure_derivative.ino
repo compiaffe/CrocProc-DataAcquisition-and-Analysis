@@ -30,7 +30,8 @@
 #define CTRL_REG1 0x26 
 #define PT_DATA_CFG 0x13
 #define set_OST 0x02
-#define set_OST_OS 0x3A
+#define set_OST_OS 0x3A //64 OS rate
+//#define set_OST_OS 0x3A
 #define set_PDEFE_DREM 0x3
 #define DATA_READY_PRESSURE 0x4
 
@@ -71,7 +72,7 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw);
 /******************** VOID SETUP ******************************************/
 void setup()
 {    
-  Serial.begin(9600);  // start serial for output
+  Serial.begin(57600);  // start serial for output
 
   /******************** Soft I2C *******************************************/
 
@@ -115,16 +116,18 @@ void loop(){
 #ifdef DEBUG
   Serial.println("Hello World!");
 #endif
+
   Soft_TripleBarometerRead(&tri_raw);
+  Serial.println(9999999,DEC);
   Serial.println(tri_raw.s0,DEC);
   Serial.println(tri_raw.s1,DEC);
   Serial.println(tri_raw.s2,DEC);
 
   //****************************   measure the time taken... ******************
-  old_time = new_time;
+ /* old_time = new_time;
   new_time = micros();
   Serial.print("us: ");
-  Serial.println((new_time-old_time),DEC);
+  Serial.println((new_time-old_time),DEC);*/
 
   /* find the derivative.....*/
   //last_raw = raw;
