@@ -40,8 +40,12 @@
 //the raw input value in binary
 struct triple{
   unsigned long s0;
+  unsigned int t0;
   unsigned long s1;
+  unsigned int t1;
   unsigned long s2;
+  unsigned int t2;
+
 } 
 tri_raw;
 
@@ -120,14 +124,17 @@ void loop(){
   Soft_TripleBarometerRead(&tri_raw);
   Serial.println(9999999,DEC);
   Serial.println(tri_raw.s0,DEC);
+  Serial.println(tri_raw.t0,DEC);
   Serial.println(tri_raw.s1,DEC);
+  Serial.println(tri_raw.t1,DEC);
   Serial.println(tri_raw.s2,DEC);
+  Serial.println(tri_raw.t2,DEC);
 
   //****************************   measure the time taken... ******************
- /* old_time = new_time;
-  new_time = micros();
-  Serial.print("us: ");
-  Serial.println((new_time-old_time),DEC);*/
+  /* old_time = new_time;
+   new_time = micros();
+   Serial.print("us: ");
+   Serial.println((new_time-old_time),DEC);*/
 
   /* find the derivative.....*/
   //last_raw = raw;
@@ -262,6 +269,8 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
   //The lower 4-bits are '0'. THus we rightshift to get rid of these.
   //CHANGED: we ignore the fraction now...
   //Serial.println(((MSB_Data<<10)|(CSB_Data<<2)|LSB_Data>>6),DEC);
+  tri_raw->t0 = micros();
+
   tri_raw->s0 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|(Data[0]>>6));   //all output data put together. 
 
 #ifdef DEBUG
@@ -278,6 +287,7 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
   Data[1] = i2c_1.read(ACK);
   Data[0] = i2c_1.read(NACK);
   i2c_1.stop();
+  tri_raw->t1 = micros();
   tri_raw->s1 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|(Data[0]>>6));   //all output data put together. 
 
 #ifdef DEBUG
@@ -295,9 +305,13 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
   Data[0] = i2c_2.read(NACK);
 
   i2c_2.stop();
+  tri_raw->t2 = micros();
+
   tri_raw->s2 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|(Data[0]>>6));   //all output data put together. 
 
 }
+
+
 
 
 
