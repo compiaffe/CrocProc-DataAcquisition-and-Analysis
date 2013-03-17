@@ -30,7 +30,7 @@
 #define CTRL_REG1 0x26 
 #define PT_DATA_CFG 0x13
 #define set_OST 0x02
-#define set_OST_OS 0x3A //64 OS rate
+#define set_OST_OS 0x22 //16 OS rate
 //#define set_OST_OS 0x3A
 #define set_PDEFE_DREM 0x3
 #define DATA_READY_PRESSURE 0x4
@@ -40,11 +40,9 @@
 //the raw input value in binary
 struct triple{
   unsigned long s0;
-  unsigned int t0;
   unsigned long s1;
-  unsigned int t1;
   unsigned long s2;
-  unsigned int t2;
+  unsigned long t;
 
 } 
 tri_raw;
@@ -80,17 +78,17 @@ void setup()
 
   /******************** Soft I2C *******************************************/
 
-  while (!Serial);
-
-  if (!digitalRead(SDA_PIN_1) && !digitalRead(SCL_PIN_1) && !digitalRead(SDA_PIN_2) && !digitalRead(SCL_PIN_2) && !digitalRead(SCL_PIN_0) && !digitalRead(SCL_PIN_0)) {
-    Serial.println("External pull-up resistors appear to be missing.");
-    Serial.println("Many false responses may be detected.");
-    Serial.println("Type any character to continue.");
-
-    while (!Serial.available());
-    Serial.println();
-
-  }
+//  while (!Serial);
+//
+//  if (!digitalRead(SDA_PIN_1) && !digitalRead(SCL_PIN_1) && !digitalRead(SDA_PIN_2) && !digitalRead(SCL_PIN_2) && !digitalRead(SCL_PIN_0) && !digitalRead(SCL_PIN_0)) {
+//    Serial.println("External pull-up resistors appear to be missing.");
+//    Serial.println("Many false responses may be detected.");
+//    Serial.println("Type any character to continue.");
+//
+//    while (!Serial.available());
+//    Serial.println();
+//
+//  }
 
   /*Set up the data ready flags...*/
   i2c_0.start();
@@ -122,13 +120,15 @@ void loop(){
 #endif
 
   Soft_TripleBarometerRead(&tri_raw);
-  Serial.println(9999999,DEC);
-  Serial.println(tri_raw.s0,DEC);
-  Serial.println(tri_raw.t0,DEC);
-  Serial.println(tri_raw.s1,DEC);
-  Serial.println(tri_raw.t1,DEC);
-  Serial.println(tri_raw.s2,DEC);
-  Serial.println(tri_raw.t2,DEC);
+  Serial.print(tri_raw.t,DEC);
+  Serial.print(' ');
+  Serial.print(tri_raw.s0,DEC);
+  Serial.print(' ');
+  Serial.print(tri_raw.s1,DEC);
+  Serial.print(' ');
+  Serial.print(tri_raw.s2,DEC);
+  Serial.println(" ");
+
 
   //****************************   measure the time taken... ******************
   /* old_time = new_time;
@@ -172,6 +172,8 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
 #ifdef DEBUG
   Serial.println("Sending 3rd baro command");
 #endif 
+  tri_raw->t = micros();
+
   //initiates a single barometer read on the third Barometer
   i2c_2.start();
   i2c_2.write(baro_write);
@@ -269,7 +271,6 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
   //The lower 4-bits are '0'. THus we rightshift to get rid of these.
   //CHANGED: we ignore the fraction now...
   //Serial.println(((MSB_Data<<10)|(CSB_Data<<2)|LSB_Data>>6),DEC);
-  tri_raw->t0 = micros();
 
   tri_raw->s0 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|(Data[0]>>6));   //all output data put together. 
 
@@ -287,7 +288,6 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
   Data[1] = i2c_1.read(ACK);
   Data[0] = i2c_1.read(NACK);
   i2c_1.stop();
-  tri_raw->t1 = micros();
   tri_raw->s1 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|(Data[0]>>6));   //all output data put together. 
 
 #ifdef DEBUG
@@ -305,11 +305,12 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
   Data[0] = i2c_2.read(NACK);
 
   i2c_2.stop();
-  tri_raw->t2 = micros();
 
   tri_raw->s2 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|(Data[0]>>6));   //all output data put together. 
 
 }
+
+
 
 
 
