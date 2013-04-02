@@ -61,11 +61,11 @@ unsigned int old_time = 0;
 unsigned int new_time = 0;
 
 /*Derivative and threshold variables*/
- long s0_dev, s1_dev,s2_dev;
- long s0_old, s1_old, s2_old;
-#define S0_THRES 90
-#define S1_THRES 90
-#define S2_THRES 90
+long s0_dev, s1_dev,s2_dev;
+long s0_old, s1_old, s2_old;
+#define S0_THRES 60
+#define S1_THRES 50
+#define S2_THRES 50
 
 
 /*Set Soft I2C pins */
@@ -93,17 +93,17 @@ void setup()
 
   /******************** Soft I2C *******************************************/
 
-//  while (!Serial);
-//
-//  if (!digitalRead(SDA_PIN_1) && !digitalRead(SCL_PIN_1) && !digitalRead(SDA_PIN_2) && !digitalRead(SCL_PIN_2) && !digitalRead(SCL_PIN_0) && !digitalRead(SCL_PIN_0)) {
-//    Serial.println("External pull-up resistors appear to be missing.");
-//    Serial.println("Many false responses may be detected.");
-//    Serial.println("Type any character to continue.");
-//
-//    while (!Serial.available());
-//    Serial.println();
-//
-//  }
+  //  while (!Serial);
+  //
+  //  if (!digitalRead(SDA_PIN_1) && !digitalRead(SCL_PIN_1) && !digitalRead(SDA_PIN_2) && !digitalRead(SCL_PIN_2) && !digitalRead(SCL_PIN_0) && !digitalRead(SCL_PIN_0)) {
+  //    Serial.println("External pull-up resistors appear to be missing.");
+  //    Serial.println("Many false responses may be detected.");
+  //    Serial.println("Type any character to continue.");
+  //
+  //    while (!Serial.available());
+  //    Serial.println();
+  //
+  //  }
 
   /*Set up the data ready flags...*/
   i2c_0.start();
@@ -136,44 +136,51 @@ void loop(){
 
   Soft_TripleBarometerRead(&tri_raw);
   /*Find the derivative and take the absolute value of that*/
-s0_dev = tri_raw.s0-s0_old;
-s0_dev = abs(s0_dev);
+  s0_dev = tri_raw.s0-s0_old;
+  s0_dev = abs(s0_dev);
 
-s1_dev = tri_raw.s1-s1_old;  
-s1_dev = abs(s1_dev);
+  s1_dev = tri_raw.s1-s1_old;  
+  s1_dev = abs(s1_dev);
 
-s2_dev = tri_raw.s2-s2_old;  
-s2_dev = abs(s2_dev);
+  s2_dev = tri_raw.s2-s2_old;  
+  s2_dev = abs(s2_dev);
 
-s0_old = tri_raw.s0;
-s1_old = tri_raw.s1;
-s2_old = tri_raw.s2;
+  s0_old = tri_raw.s0;
+  s1_old = tri_raw.s1;
+  s2_old = tri_raw.s2;
 
 
-if(s0_dev >= S0_THRES){
-  Serial.print("S0 @ "); 
-  Serial.println(tri_raw.t,DEC);
+  if(s0_dev >= S0_THRES){
+    Serial.print('0'); 
+    Serial.print(' '); 
+    Serial.print(tri_raw.t,DEC);
+    Serial.println(""); 
 
-}
+  }
 
-if(s1_dev >= S1_THRES){
-    Serial.print("S1 @ "); 
-  Serial.println(tri_raw.t,DEC);
-}
+  if(s1_dev >= S1_THRES){
+    Serial.print('1'); 
+    Serial.print(' '); 
+    Serial.print(tri_raw.t,DEC);
+    Serial.println(""); 
+  }
 
-if(s2_dev >= S2_THRES){
-    Serial.print("S2 @ "); 
-  Serial.println(tri_raw.t,DEC);
-}
+  if(s2_dev >= S2_THRES){
+    Serial.print('2'); 
+    Serial.print(' '); 
+    Serial.print(tri_raw.t,DEC);
+    Serial.println(""); 
 
-//  Serial.print(tri_raw.t,DEC);
-//  Serial.print(' ');
-//  Serial.print(tri_raw.s0,DEC);
-//  Serial.print(' ');
-//  Serial.print(tri_raw.s1,DEC);
-//  Serial.print(' ');
-//  Serial.print(tri_raw.s2,DEC);
-//  Serial.println(" ");
+  }
+
+  //  Serial.print(tri_raw.t,DEC);
+  //  Serial.print(' ');
+  //  Serial.print(tri_raw.s0,DEC);
+  //  Serial.print(' ');
+  //  Serial.print(tri_raw.s1,DEC);
+  //  Serial.print(' ');
+  //  Serial.print(tri_raw.s2,DEC);
+  //  Serial.println(" ");
 
 
   //****************************   measure the time taken... ******************
@@ -355,6 +362,7 @@ unsigned int Soft_TripleBarometerRead(triple *tri_raw){
   tri_raw->s2 = (unsigned long)((Data[2]<<10)|(Data[1]<<2)|(Data[0]>>6));   //all output data put together. 
 
 }
+
 
 
 
