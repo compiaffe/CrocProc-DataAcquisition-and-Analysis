@@ -30,7 +30,13 @@
 #define CTRL_REG1 0x26 
 #define PT_DATA_CFG 0x13
 #define set_OST 0x02
-#define set_OST_OS 0x3A //64 OS rate
+#define set_OST_OS 0x02 //1 OS rate
+//0x02 -  1xOS: 90-154Hz
+//0x0A -  2xOS: 70Hz
+//0x12 -  4xOS: 45Hz
+//0x1A -  8xOS: 26.47Hz-30Hz
+//0x22 - 16xOS: 16.13Hz
+
 //#define set_OST_OS 0x3A
 #define set_PDEFE_DREM 0x3
 #define DATA_READY_PRESSURE 0x4
