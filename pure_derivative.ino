@@ -9,6 +9,7 @@
 
 #include <I2C.h>
 #include <DigitalIO.h>
+#include <math.h>
 
 #define CP_OK 1
 #define CP_ERROR 0
@@ -58,6 +59,14 @@ int derivative;
 
 unsigned int old_time = 0;
 unsigned int new_time = 0;
+
+/*Derivative and threshold variables*/
+ long s0_dev, s1_dev,s2_dev;
+ long s0_old, s1_old, s2_old;
+#define S0_THRES 90
+#define S1_THRES 90
+#define S2_THRES 90
+
 
 /*Set Soft I2C pins */
 const uint8_t SDA_PIN_0 = A4;
@@ -126,14 +135,45 @@ void loop(){
 #endif
 
   Soft_TripleBarometerRead(&tri_raw);
-  Serial.print(tri_raw.t,DEC);
-  Serial.print(' ');
-  Serial.print(tri_raw.s0,DEC);
-  Serial.print(' ');
-  Serial.print(tri_raw.s1,DEC);
-  Serial.print(' ');
-  Serial.print(tri_raw.s2,DEC);
-  Serial.println(" ");
+  /*Find the derivative and take the absolute value of that*/
+s0_dev = tri_raw.s0-s0_old;
+s0_dev = abs(s0_dev);
+
+s1_dev = tri_raw.s1-s1_old;  
+s1_dev = abs(s1_dev);
+
+s2_dev = tri_raw.s2-s2_old;  
+s2_dev = abs(s2_dev);
+
+s0_old = tri_raw.s0;
+s1_old = tri_raw.s1;
+s2_old = tri_raw.s2;
+
+
+if(s0_dev >= S0_THRES){
+  Serial.print("S0 @ "); 
+  Serial.println(tri_raw.t,DEC);
+
+}
+
+if(s1_dev >= S1_THRES){
+    Serial.print("S1 @ "); 
+  Serial.println(tri_raw.t,DEC);
+}
+
+if(s2_dev >= S2_THRES){
+    Serial.print("S2 @ "); 
+  Serial.println(tri_raw.t,DEC);
+}
+
+//  Serial.print(tri_raw.t,DEC);
+//  Serial.print(' ');
+//  Serial.print(tri_raw.s0,DEC);
+//  Serial.print(' ');
+//  Serial.print(tri_raw.s1,DEC);
+//  Serial.print(' ');
+//  Serial.print(tri_raw.s2,DEC);
+//  Serial.println(" ");
 
 
   //****************************   measure the time taken... ******************
