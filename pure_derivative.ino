@@ -4,7 +4,7 @@
 // Created 24 Januar 2013
 
 // This software contacts the MPL3115A2 barometer via I2C and reads a single barometer value with 20bits
-// accuracy. It calculates the averages over a 30 sample long period
+// accuracy. 
 
 
 #include <I2C.h>
@@ -44,10 +44,10 @@
 
 //the raw input value in binary
 struct triple{
-  unsigned long s_0;
-  unsigned long s_1;
-  unsigned long s_2;
-  unsigned long t;
+   long s_0;
+   long s_1;
+   long s_2;
+   long t;
 
 } 
 tri_raw;
@@ -66,11 +66,11 @@ long s0_dev, s1_dev,s2_dev;
 long s0_old, s1_old, s2_old;
 
 /*Pressure reading*/
-unsigned long p_ref[3] = {
+ long p_ref[3] = {
   101325,101325,101325}; //std athmosperic pressure
 float g = 9.81;
 float ro_water = 1000; //density of 1 m^3 of water
-
+float area = 1;
 struct d_trip{
   double s_0;
   double s_1;
@@ -149,7 +149,6 @@ void loop(){
   Serial.print(depth.s_2*1000,DEC);
   Serial.println(" ");
 }
-
 
 
 unsigned int Soft_TripleBarometerRead(triple *tri_raw){
@@ -346,6 +345,12 @@ void serialEvent() {
   Serial.print(p_ref[2],DEC);
   Serial.println(" ");
       break;
+      case 'v':
+      area = PI*pow((10,5/2),2);
+      break;
+      case 'd':
+      area = 1;
+      break;
 
     }
   }
@@ -353,17 +358,15 @@ void serialEvent() {
 
 
 void find_depth(){
-  triple sea_level_p;
+  d_trip sea_level_p;
   sea_level_p.s_0 = tri_raw.s_0-p_ref[0];
   sea_level_p.s_1 = tri_raw.s_1-p_ref[1];
   sea_level_p.s_2 = tri_raw.s_2-p_ref[2];
 
   //  Pressure = densitiy*g*height...
-  depth.s_0 = sea_level_p.s_0/(ro_water*g);
-  depth.s_1 = sea_level_p.s_1/(ro_water*g);
-  depth.s_2 = sea_level_p.s_2/(ro_water*g);
-
-
+  depth.s_0 = (sea_level_p.s_0/(ro_water*g))*area;
+  depth.s_1 = (sea_level_p.s_1/(ro_water*g))*area;
+  depth.s_2 = (sea_level_p.s_2/(ro_water*g))*area;
 }
 
 
