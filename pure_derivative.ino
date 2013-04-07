@@ -31,7 +31,7 @@
 #define PT_DATA_CFG 0x13
 #define set_OST 0x02
 #define set_OST_OS 0x02 //1 OS rate
-//0x02 -  1xOS: 90-154Hz
+//0x02 -  1xOS: 90-125Hz
 //0x0A -  2xOS: 70Hz
 //0x12 -  4xOS: 45Hz
 //0x1A -  8xOS: 26.47Hz-30Hz
