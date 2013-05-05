@@ -44,21 +44,15 @@
 
 //the raw input value in binary
 struct triple{
-  unsigned long s_0;
-  unsigned long s_1;
-  unsigned long s_2;
-  unsigned long t;
-
-} 
-tri_raw;
-
-struct sin_triple{
    long s_0;
    long s_1;
    long s_2;
    long t;
 
-};
+} 
+tri_raw;
+
+
 
 
 
@@ -360,7 +354,7 @@ void serialEvent() {
 
 
 void find_depth(){
-  sin_triple sea_level_p;
+  triple sea_level_p;
   sea_level_p.s_0 = tri_raw.s_0-p_ref[0];
   sea_level_p.s_1 = tri_raw.s_1-p_ref[1];
   sea_level_p.s_2 = tri_raw.s_2-p_ref[2];
