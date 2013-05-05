@@ -52,6 +52,13 @@ struct triple{
 } 
 tri_raw;
 
+struct sin_triple{
+   long s_0;
+   long s_1;
+   long s_2;
+   long t;
+
+};
 
 
 
@@ -353,7 +360,7 @@ void serialEvent() {
 
 
 void find_depth(){
-  triple sea_level_p;
+  sin_triple sea_level_p;
   sea_level_p.s_0 = tri_raw.s_0-p_ref[0];
   sea_level_p.s_1 = tri_raw.s_1-p_ref[1];
   sea_level_p.s_2 = tri_raw.s_2-p_ref[2];
